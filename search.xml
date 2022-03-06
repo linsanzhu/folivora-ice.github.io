@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Linux常用命令</title>
+    <url>/2020/09/21/Linux%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</url>
+    <content><![CDATA[<h1 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h1><ul>
+<li><h2 id="防火墙配置"><a href="#防火墙配置" class="headerlink" title="防火墙配置"></a>防火墙配置</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> CentOS 启用防火墙</span></span><br><span class="line">firewall-cmd --enable </span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> CentOS 开启、重启、关闭防火墙服务</span></span><br><span class="line">systemctl start firewalld</span><br><span class="line">systemctl restart firewalld</span><br><span class="line">systemctl stop firewalld</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> CentOS 临时开放端口, 注意不可以调用firewall-cmd --reload命令, 一旦调用将失效</span></span><br><span class="line">firewall-cmd --zone=public --add-port=9200/tcp</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> CentOS 永久开放端口</span></span><br><span class="line">firewall-cmd --zone=public --add-port=9200/tcp --permanent</span><br><span class="line">firewall-cmd --reload</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> CentOS 取消端口开放</span></span><br><span class="line">firewall-cmd --zone=public --remove-port=9200/tcp</span><br><span class="line">firewall-cmd --reload</span><br></pre></td></tr></table></figure>
+</li>
+<li><h2 id="网络连接设置"><a href="#网络连接设置" class="headerlink" title="网络连接设置"></a>网络连接设置</h2><a id="more"></a>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># CentOS 启用网卡, 其中ifcfg-eth0为网卡</span><br><span class="line">vi &#x2F;etc&#x2F;sysconfig&#x2F;network-scripts&#x2F;ifcfg-eth0</span><br><span class="line">将ONBOOT&#x3D;no改为ONBOOT&#x3D;yes</span><br><span class="line"></span><br><span class="line"># 重启网络服务</span><br><span class="line">systemctl restart network</span><br></pre></td></tr></table></figure>
+</li>
+<li><h2 id="连接查询"><a href="#连接查询" class="headerlink" title="连接查询"></a>连接查询</h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># 查询端口占用</span><br><span class="line">1. 使用 lsof: lsof -i:5000</span><br><span class="line">2. 使用 netstat: netstat -anlp | grep 5000</span><br></pre></td></tr></table></figure></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Linux运维</category>
+      </categories>
+      <tags>
+        <tag>Linux常用命令</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux系统服务</title>
+    <url>/2020/09/30/Linux%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1/</url>
+    <content><![CDATA[<h1 id="service命令"><a href="#service命令" class="headerlink" title="service命令"></a>service命令</h1><h2 id="service命令的使用"><a href="#service命令的使用" class="headerlink" title="service命令的使用"></a>service命令的使用</h2><p>Linux系统一般使用service命令来管理服务:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 启动服务</span></span><br><span class="line">service network start</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 停止服务</span></span><br><span class="line">service network stop</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启服务</span></span><br><span class="line">service network restart</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看服务状态</span></span><br><span class="line">service network status</span><br></pre></td></tr></table></figure>
+<h2 id="service原理"><a href="#service原理" class="headerlink" title="service原理"></a>service原理</h2><a id="more"></a>
+<p>Linux系统的服务实际上是在后台运行的命令,通常一个程序想要作为系统服务运行,首先需要在/etc/init.d目录下存放一个与服务同名的文件,例如network服务,查看/etc/init.d/network文件,其简化后内容如下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">case &quot;$1&quot; in</span><br><span class="line">start)</span><br><span class="line">    ;;</span><br><span class="line">stop)</span><br><span class="line">    ;;</span><br><span class="line">reload)</span><br><span class="line">    ;;</span><br><span class="line">force-reload|restart)</span><br><span class="line">    ;;</span><br><span class="line">*)</span><br><span class="line">    ;;</span><br><span class="line">esac</span><br><span class="line">exit 0</span><br></pre></td></tr></table></figure>
+<p>可见一个系统服务管理程序只要实现对命令行参数start|stop|restart等进行处理就可以被service命令管理,在使用service xxx cmd来管理服务时,其等价于执行/etc/init.d/xxx cmd</p>
+<blockquote>
+<p><em>注: /etc/init.d/xxx文件必须具有可执行权限</em></p>
+</blockquote>
+<h2 id="开机自启动"><a href="#开机自启动" class="headerlink" title="开机自启动"></a>开机自启动</h2><h3 id="chkconfig命令"><a href="#chkconfig命令" class="headerlink" title="chkconfig命令"></a>chkconfig命令</h3><p>在/etc/init.d下存放服务的管理文件只是可以让程序作为服务运行,一旦系统重启,就必须手动执行service xxx start来启动服务,大多数情况服务需要开机自启动,这时候就要用chkconfig命令:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 添加启动项</span></span><br><span class="line">chkconfig --add [command]</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启用/禁用启动项</span></span><br><span class="line">chkconfig [command] on/off</span><br></pre></td></tr></table></figure>
+<p>需要注意的是,要使用chkconfig命令,文件首行必须是:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">chkconfig: 2345 10 90</span></span><br></pre></td></tr></table></figure>
+<p>其中2345表示运行级别,Linux系统有0~6七个运行级别(见:<a href="#linux%E8%BF%90%E8%A1%8C%E7%BA%A7%E5%88%AB">Linux运行级别</a>)<br>10表示启动优先级,数字越小优先级越高,越早被启动, 取值范围0~100<br>90表示退出优先级,数字越小优先级越高,越早被退出, 取值范围0~100</p>
+<h3 id="Linux运行级别"><a href="#Linux运行级别" class="headerlink" title="Linux运行级别"></a>Linux运行级别</h3><table>
+<thead>
+<tr>
+<th align="center">级别</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td>停机,通常不用</td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td>单用户模式,与Windows系统的安全模式类似</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td>多用户模式,但没有NFS支持</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td>完全多用户模式,支持NFS</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td>一般不用,在一些特殊情况下可以用它来做一些事情.例如在笔记本电脑的电池用尽时,可以切换到这个模式来做一些设置</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td>有网络支持有X-Window支持的多用户模式</td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td>重新引导系统,即重启,运行命令init 6就会重启系统,不建议讲服务的运行级别设置为6</td>
+</tr>
+</tbody></table>
+<h3 id="rd-d目录"><a href="#rd-d目录" class="headerlink" title="rd*.d目录"></a>rd*.d目录</h3><p>事实上要让服务开机自启动,只需要在/etc/rc.d/rc*.d目录(Ubuntu等系统是在/etc/rd*.d目录)下根据一定规则创建/etc/init.d目录中服务文件的软连接即可,其中＊表示运行级别,如rc2.d目录中表示以运行级别2启动。<br>通常在rc*.d目录中有两种文件:</p>
+<ul>
+<li>以K开头的文件:在系统退出时被调用</li>
+<li>以S开头的文件:在系统启动时被调用</li>
+</ul>
+<p>这两种文件都是对/etc/init.d/目录中的服务文件的软链接,K/S后是相应服务名,与链接的服务文件一致</p>
+<blockquote>
+<p><strong><em>如果只是需要开机执行某些简单命令,可以直接在/etc/rc.d/rc.local文件中添加需要开机执行的命令</em></strong></p>
+</blockquote>
+<h1 id="Systemd"><a href="#Systemd" class="headerlink" title="Systemd"></a>Systemd</h1><p>过去Linux系统启动是采用init进程的,而init进程是串行化的,所以启动较慢,而且init进程只负责执行脚本,启动脚本需要自行处理各种异常情况,导致启动脚本常常很臃肿,为了解决这些问题,RedHat推出了Systemd初始化系统,其特点:</p>
+<ul>
+<li>系统引导时实现服务并行启动</li>
+<li>按需启动守护进程</li>
+<li>自动化的服务依赖关系管理</li>
+<li>同时采用socket式与D-Bus总线式激活服务</li>
+<li>系统状态快照和恢复</li>
+<li>利用Linux的cgroups监视进程</li>
+<li>维护挂载点和自动挂载点</li>
+<li>各服务间基于依赖关系进行精密控制</li>
+</ul>
+<h2 id="systemctl命令的使用"><a href="#systemctl命令的使用" class="headerlink" title="systemctl命令的使用"></a>systemctl命令的使用</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 重启系统</span></span><br><span class="line">sudo systemctl reboot</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭系统,切断电源</span></span><br><span class="line">sudo systemctl poweroff</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> CPU停止工作</span></span><br><span class="line">sudo systemctl halt</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 暂停系统</span></span><br><span class="line">sudo systemctl suspend</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 让系统进入冬眠状态</span></span><br><span class="line">sudo systemctl hibernate</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 让系统进入交互式休眠状态</span></span><br><span class="line">sudo systemctl hybrid-sleep</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动进入救援状态（单用户状态）</span></span><br><span class="line">sudo systemctl rescue</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 服务开机自启动</span></span><br><span class="line">sudo systemctl enable xxx</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 禁用服务开机自启动</span></span><br><span class="line">sudo systemctl disable xxx</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动服务</span></span><br><span class="line">sudo systemctl start xxx</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 停止服务</span></span><br><span class="line">sudo systemctl start xxx</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启服务</span></span><br><span class="line">sudo systemctl restart xxx</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 杀死一个服务的所有子进程</span></span><br><span class="line">sudo systemctl kill apache.service</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重新加载一个服务的配置文件</span></span><br><span class="line">sudo systemctl reload apache.service</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重载所有修改过的配置文件</span></span><br><span class="line">sudo systemctl daemon-reload</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示某个 Unit 的所有底层参数</span></span><br><span class="line">systemctl show httpd.service</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 显示某个 Unit 的指定属性的值</span></span><br><span class="line">systemctl show -p CPUShares httpd.service</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 设置某个 Unit 的指定属性</span></span><br><span class="line">sudo systemctl set-property httpd.service CPUShares=500</span><br></pre></td></tr></table></figure>
+
+<h2 id="添加系统服务"><a href="#添加系统服务" class="headerlink" title="添加系统服务"></a>添加系统服务</h2><p>Systemd可以管理所有系统资源,在Systemd中资源被统称为Unit。Unit一共分为12种:</p>
+<ul>
+<li>Service unit：系统服务</li>
+<li>Target unit：多个 Unit 构成的一个组</li>
+<li>Device Unit：硬件设备</li>
+<li>Mount Unit：文件系统的挂载点</li>
+<li>Automount Unit：自动挂载点</li>
+<li>Path Unit：文件或路径</li>
+<li>Scope Unit：不是由 Systemd 启动的外部进程</li>
+<li>Slice Unit：进程组</li>
+<li>Snapshot Unit：Systemd 快照,可以切回某个快照</li>
+<li>Socket Unit：进程间通信的 socket</li>
+<li>Swap Unit：swap 文件</li>
+<li>Timer Unit：定时器</li>
+</ul>
+<p>每一个Unit都有一个配置文件,告诉Systemd如何启动该Unit。默认情况下,Systemd从/etc/systemd/system读取配置文件,然而实际上该目录的文件均为/usr/lib/systemd/system目录中文件的软链接,systemctl enable用于在两个目录间建立符号链接,sytemctl diable则用于撤销链接关系。</p>
+<h3 id="Unit配置文件"><a href="#Unit配置文件" class="headerlink" title="Unit配置文件"></a>Unit配置文件</h3><p>以network服务的配置文件为例,其内容如下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=Raise network interfaces</span><br><span class="line">Documentation=man:interfaces(5)</span><br><span class="line">DefaultDependencies=no</span><br><span class="line">Wants=network.target</span><br><span class="line">After=local-fs.target network-pre.target apparmor.service systemd-sysctl.service systemd-modules-load.service</span><br><span class="line">Before=network.target shutdown.target network-online.target</span><br><span class="line">Conflicts=shutdown.target</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line">WantedBy=network-online.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=oneshot</span><br><span class="line">EnvironmentFile=-/etc/default/networking</span><br><span class="line">ExecStartPre=-/bin/sh -c &#x27;[ &quot;$CONFIGURE_INTERFACES&quot; != &quot;no&quot; ] &amp;&amp; [ -n &quot;$(ifquery --read-environment --list --exclude=lo)&quot; ] &amp;&amp; udevadm settle&#x27;</span><br><span class="line">ExecStart=/sbin/ifup -a --read-environment</span><br><span class="line">ExecStop=/sbin/ifdown -a --read-environment --exclude=lo</span><br><span class="line">RemainAfterExit=true</span><br><span class="line">TimeoutStartSec=5min</span><br></pre></td></tr></table></figure>
+<p>了解ini文件格式的话,不难发现Unit配置文件分为了三节(section):</p>
+<ul>
+<li><h4 id="Unit"><a href="#Unit" class="headerlink" title="Unit"></a>Unit</h4><p>[Unit]区块通常是配置文件的第一个区块,用来定义Unit的元数据,以及配置与其他Unit的关系。它的主要字段如下:</p>
+<ul>
+<li>Description：简短描述</li>
+<li>Documentation：文档地址</li>
+<li>Requires：当前 Unit 依赖的其他 Unit,如果它们没有运行,当前 Unit 会启动失败</li>
+<li>Wants：与当前 Unit 配合的其他 Unit,如果它们没有运行,当前 Unit 不会启动失败</li>
+<li>BindsTo：与Requires类似,它指定的 Unit 如果退出,会导致当前 Unit 停止运行</li>
+<li>Before：如果该字段指定的 Unit 也要启动,那么必须在当前 Unit 之后启动</li>
+<li>After：如果该字段指定的 Unit 也要启动,那么必须在当前 Unit 之前启动</li>
+<li>Conflicts：这里指定的 Unit 不能与当前 Unit 同时运行</li>
+<li>Condition…：当前 Unit 运行必须满足的条件,否则不会运行</li>
+<li>Assert…：当前 Unit 运行必须满足的条件,否则会报启动失败</li>
+</ul>
+</li>
+<li><h4 id="Install"><a href="#Install" class="headerlink" title="Install"></a>Install</h4><p>[Install]通常是配置文件的最后一个区块,用来定义如何启动,以及是否开机启动。它的主要字段如下:</p>
+<ul>
+<li>WantedBy：它的值是一个或多个 Target,当前 Unit 激活时（enable）符号链接会放入/etc/systemd/system目录下面以 Target 名 + .wants后缀构成的子目录中</li>
+<li>RequiredBy：它的值是一个或多个 Target,当前 Unit 激活时,符号链接会放入/etc/systemd/system目录下面以 Target 名 + .required后缀构成的子目录中</li>
+<li>Alias：当前 Unit 可用于启动的别名</li>
+<li>Also：当前 Unit 激活（enable）时,会被同时激活的其他 Unit</li>
+</ul>
+</li>
+<li><h4 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h4><p>[Service]区块是Service 的配置,只有 Service 类型的 Unit 才有这个区块。它的主要字段如下:</p>
+<ul>
+<li>Type：定义启动时的进程行为。它有以下几种值。<ul>
+<li>simple：默认值,执行ExecStart指定的命令,启动主进程</li>
+<li>forking：以 fork 方式从父进程创建子进程,创建后父进程会立即退出</li>
+<li>oneshot：一次性进程,Systemd 会等当前服务退出,再继续往下执行</li>
+<li>dbus：当前服务通过D-Bus启动</li>
+<li>notify：当前服务启动完毕,会通知Systemd,再继续往下执行</li>
+<li>idle：若有其他任务执行完毕,当前服务才会运行</li>
+</ul>
+</li>
+<li>ExecStart：启动当前服务的命令,命令必须使用绝对路径,如:/bin/sh /path/to/xxx.sh</li>
+<li>ExecStartPre：启动当前服务之前执行的命令,命令必须使用绝对路径</li>
+<li>ExecStartPost：启动当前服务之后执行的命令,命令必须使用绝对路径</li>
+<li>ExecReload：重启当前服务时执行的命令,命令必须使用绝对路径</li>
+<li>ExecStop：停止当前服务时执行的命令,命令必须使用绝对路径</li>
+<li>ExecStopPost：停止当前服务之后执行的命令,命令必须使用绝对路径</li>
+<li>RestartSec：自动重启当前服务间隔的秒数</li>
+<li>Restart：定义何种情况 Systemd 会自动重启当前服务,可能的值包括always（总是重启）、on-success、on-failure、on-abnormal、on-abort、on-watchdog</li>
+<li>TimeoutSec：定义 Systemd 停止当前服务之前等待的秒数</li>
+<li>Environment：指定环境变量</li>
+</ul>
+</li>
+</ul>
+<p>Unit 配置文件的完整字段清单,请参考<a href="https://www.freedesktop.org/software/systemd/man/systemd.unit.html">官方文档</a>。</p>
+<h3 id="Target"><a href="#Target" class="headerlink" title="Target"></a>Target</h3><p>启动计算机的时候,需要启动大量的 Unit。如果每一次启动,都要一一写明本次启动需要哪些 Unit,显然非常不方便。Systemd 的解决方案就是 Target。<br>简单说,Target 就是一个 Unit 组,包含许多相关的 Unit 。启动某个 Target 的时候,Systemd 就会启动里面所有的 Unit。从这个意义上说,Target 这个概念类似于 “状态点”,启动某个Target就好比启动到某种状态。<br>传统的init启动模式里面,有 RunLevel 的概念,跟 Target 的作用很类似。不同的是,RunLevel 是互斥的,不可能多个 RunLevel 同时启动,但是多个 Target 可以同时启动。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看当前系统的所有 Target</span></span><br><span class="line">systemctl list-unit-files --type=target</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看一个 Target 包含的所有 Unit</span></span><br><span class="line">systemctl list-dependencies multi-user.target</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看启动时的默认 Target</span></span><br><span class="line">systemctl get-default</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 设置启动时的默认 Target</span></span><br><span class="line">sudo systemctl set-default multi-user.target</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换 Target 时,默认不关闭前一个 Target 启动的进程,</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> systemctl isolate 命令改变这种行为,</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭前一个 Target 里面所有不属于后一个 Target 的进程</span></span><br><span class="line">sudo systemctl isolate multi-user.target</span><br></pre></td></tr></table></figure>
+<p>Target 与 传统 RunLevel 的对应关系如下。</p>
+<table>
+<thead>
+<tr>
+<th>Traditional runlevel</th>
+<th>New target name</th>
+<th>Symbolically linked to…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>runlevel0.target</td>
+<td>poweroff.target</td>
+</tr>
+<tr>
+<td>1</td>
+<td>runlevel1.target</td>
+<td>rescue.target</td>
+</tr>
+<tr>
+<td>2</td>
+<td>runlevel2.target</td>
+<td>multi-user.target</td>
+</tr>
+<tr>
+<td>3</td>
+<td>runlevel3.target</td>
+<td>multi-user.target</td>
+</tr>
+<tr>
+<td>4</td>
+<td>runlevel4.target</td>
+<td>multi-user.target</td>
+</tr>
+<tr>
+<td>5</td>
+<td>runlevel5.target</td>
+<td>graphical.target</td>
+</tr>
+<tr>
+<td>6</td>
+<td>runlevel6.target</td>
+<td>reboot.target</td>
+</tr>
+</tbody></table>
+<p>它与init进程的主要差别如下:</p>
+<ol>
+<li>默认的 RunLevel(在/etc/inittab文件设置)现在被默认的 Target 取代,位置是/etc/systemd/system/default.target,通常符号链接到graphical.target(图形界面)或者multi-user.target(多用户命令行)。</li>
+<li>启动脚本的位置,以前是/etc/init.d目录,符号链接到不同的 RunLevel 目录 (比如/etc/rc3.d、/etc/rc5.d等),现在则存放在/lib/systemd/system和/etc/systemd/system目录。</li>
+<li>配置文件的位置,以前init进程的配置文件是/etc/inittab,各种服务的配置文件存放在/etc/sysconfig目录。现在的配置文件主要存放在/lib/systemd目录,在/etc/systemd目录里面的修改可以覆盖原始设置。</li>
+</ol>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>假设当前在/opt目录下有可执行程序demo,其用于定时从Wallpaper网站抓取一张壁纸并替换当前壁纸,我们想要开机自动执行它,首先在/usr/lib/systemd/system/目录创建demo.service文件,根据上面的说明,其内容如下:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=demo service</span><br><span class="line"><span class="meta">#</span><span class="bash"> 强依赖网络服务</span></span><br><span class="line">Requires=network-online.target</span><br><span class="line">BindsTo=network.target</span><br><span class="line">After=network.target</span><br><span class="line">[Install]</span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line">ExecStart=/opt/demo</span><br><span class="line">ExecStart=/usr/bin/kill -9 $(/usr/bin/ps aux | grep demo | awk &#x27;&#123;print $2&#125;&#x27;) &amp;&amp; /opt/demo</span><br><span class="line">EXECStop=/usr/bin/kill -9 $(/usr/bin/ps aux | grep demo | awk &#x27;&#123;print $2&#125;&#x27;)</span><br><span class="line">Restart=on-failure</span><br></pre></td></tr></table></figure>
+<p>写好demo.service文件后,需要执行 systemctl daemon-reload命令来重新加载所有配置文件,然后执行systemctl enable demo命令,这样下次开机时demo程序就会自动执行。</p>
+]]></content>
+      <categories>
+        <category>Linux运维</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Golang插件</title>
+    <url>/2020/10/21/Golang%E6%8F%92%E4%BB%B6/</url>
+    <content><![CDATA[<p>最近项目中一个模块出现因业务变化可能经常需要扩展功能的情况, 为了避免经常性的修改主程序, 于是就需要能够像C/C++动态库那样,动态加载或更换业务功能。虽然Golang可以通过system包或者CGO,轻松的加载C/C++编写的动态库,但是却有:</p>
+<ul>
+<li>Golang与C进行数据交换时需要做复杂的转换</li>
+<li>受Golang的垃圾回收机制影响,使用指针时需要特别注意,否则很可能在传入C函数时就已经被回收,成为空指针</li>
+<li>不管是用CGO编写,还是用C编写,业务逻辑处理起来都没有直接用Golang方便</li>
+</ul>
+<p>等等诸多问题<br>索性,Go在1.8版本之后提供了另一种动态加载功能的方式: Plugin。Plugin完全由Golang编写,通过go build –buildmode=plugin命令编译成so文件后,在Go程序中使用plugin包即可轻松加载使用。</p>
+<a id="more"></a>
+
+<h1 id="第一个插件"><a href="#第一个插件" class="headerlink" title="第一个插件"></a>第一个插件</h1><p>首先创建项目test_plugin,目录结构如下:</p>
+<pre><code>test_plugin/
+  - main.go
+  - plugins/
+    - helloworld/
+      - main.go</code></pre>
+<h2 id="编写插件"><a href="#编写插件" class="headerlink" title="编写插件"></a>编写插件</h2><p>接下来为插件helloworld添加一个导出方法:</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="comment">// helloworld/main.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// [1]</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// [2]</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;plugin welcom has been loaded&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// [3]</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Welcom</span><span class="params">(name <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Welcom &quot;</span> + name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后将该插件编译为so文件, 只需执行命令:</p>
+<pre><code>go build -o lib/welcom.so --buildmode=plugin test_plugin/plugins/helloworld</code></pre>
+<blockquote>
+<p><strong>要点</strong>:</p>
+<ul>
+<li>首先, 如 <strong>[1]</strong> 所见, 插件必须属于main包</li>
+<li>其次, 如 <strong>[3]</strong> 所见, 如果某个方法或者变量需要被外部程序使用, 则必须为导出变量, 即首字母大写</li>
+<li>另外, 插件不需要main方法</li>
+</ul>
+</blockquote>
+<h2 id="使用插件"><a href="#使用插件" class="headerlink" title="使用插件"></a>使用插件</h2><p>接下来就可以使用生成的welcom.so文件了:</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="comment">// main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// [1]</span></span><br><span class="line">    plg, err := plugin.Open(<span class="string">&quot;./lib/welcom.so&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">      fmt.Println(err.Error())</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// [2]</span></span><br><span class="line">    symbol, err := plg.Lookup(<span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">      fmt.Println(err.Error())</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// [3]</span></span><br><span class="line">    welcom := symbol.(<span class="function"><span class="keyword">func</span><span class="params">(name <span class="keyword">string</span>)</span>)</span></span><br><span class="line">    welcom(<span class="string">&quot;World&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">### </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>编译main.go并运行后,可以看到输出:</p>
+<pre><code>begin main
+plugin welcom has been loaded
+Welcom World</code></pre>
+<h3 id="plugin包"><a href="#plugin包" class="headerlink" title="plugin包"></a>plugin包</h3><p>Golang的plugin包很简单, 只提供了两个方法:</p>
+<pre><code>func Open(path string) (*Plugin, error)
+func (P *Plugin) Lookup(symName string) (Symbol, error)</code></pre>
+<p>Open方法接受一个string类型的参数, 表示要加载的插件的路径, 可以为相对路径或绝对路径。其返回一个plugin.Plugin对象, 当成功加载插件后, 就可以使用该对象的Lookup方法来尝试获取插件中的指定方法, 如上例中的 <strong>[2]</strong> 所示。通常, 插件的方法或变量要能被外部使用,则必须被导出, 否则Lookup方法将返回错误。<br>当使用Lookup方法成功获取到要使用的变量/方法后,其返回一个 <strong><em>指针</em></strong>, 指向被导出变量/方法, 通常我们要像上例中 <strong>[3]</strong> 将之转为我们需要的类型来使用。</p>
+<h3 id="插件加载顺序"><a href="#插件加载顺序" class="headerlink" title="插件加载顺序"></a>插件加载顺序</h3><p>  从上面的输出可以看出, 当插件被加载后首先会执行插件的init()方法</p>
+<h1 id="坑点"><a href="#坑点" class="headerlink" title="坑点"></a>坑点</h1><blockquote>
+<h2 id="同一插件只会被加载一次"><a href="#同一插件只会被加载一次" class="headerlink" title="同一插件只会被加载一次"></a>同一插件只会被加载一次<sup></sup></h2></blockquote>
+<h3 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h3><p><strong><em>重复加载完全相同的插件(路径,文件名, 内容完全一致)两次, 实际上第二次会直接返回第一次的对象</em></strong></p>
+<p>首先来修改一下main.go文件, 在main方法里, 我们调用两次Open方法来加载welcom插件看看</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getPluginMethod</span><span class="params">(pluginPath, method <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">	plugin, err := plugin.Open(pluginPath)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(plugin)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> plugin.Lookup(method)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">	_, err := getPluginMethod(<span class="string">&quot;./lib/welcom.so&quot;</span>, <span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	_, err = getPluginMethod(<span class="string">&quot;./lib/welcom.so&quot;</span>, <span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行后, 输出如下:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin welcom has been loaded
+&amp;&#123;test_plugin/plugins/helloworld  0xc0000240c0 map[Welcom:0x7f87780a1e80]&#125;
+&amp;&#123;test_plugin/plugins/helloworld  0xc0000240c0 map[Welcom:0x7f87780a1e80]&#125;</code></pre>
+<p>可以看到两次加载返回的Plugin对象实际指向同一地址, 并且init方法实际只执行了一次</p>
+<blockquote>
+<h2 id="不能重复加载"><a href="#不能重复加载" class="headerlink" title="不能重复加载"></a>不能重复加载</h2></blockquote>
+<p>该问题分为两种情况: </p>
+<ul>
+<li><h3 id="插件源码路径及文件名完全相同-但内容不同-同一插件的不同版本"><a href="#插件源码路径及文件名完全相同-但内容不同-同一插件的不同版本" class="headerlink" title="插件源码路径及文件名完全相同, 但内容不同(同一插件的不同版本)"></a>插件源码路径及文件名完全相同, 但内容不同(同一插件的不同版本)</h3></li>
+</ul>
+<p>我们首先来修改helloworld/main.go文件, 并编译生成hello.so文件</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="comment">// helloworld/main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;plugin hello has been loaded&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Hello</span><span class="params">(name <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;Hello &quot;</span> + name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>最终目录结构:</p>
+<pre><code>test_plugin/
+  - main.go
+  - plugins/
+    - helloworld/
+      - main.go
+  - lib/
+    - hello.so
+    - welcom.so</code></pre>
+<p>然后我们在main方法中同时加载hello.so和welcom.so</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getPluginMethod</span><span class="params">(pluginPath, method <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">	plugin, err := plugin.Open(pluginPath)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> plugin.Lookup(method)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">  helloSymbol, err := getPluginMethod(<span class="string">&quot;./lib/hello.so&quot;</span>, <span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">  <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">	welcomSymbol, err := getPluginMethod(<span class="string">&quot;./lib/welcom.so&quot;</span>, <span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  hello, ok := helloSymbol.(<span class="function"><span class="keyword">func</span><span class="params">(name <span class="keyword">string</span>)</span>)</span></span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;hello must be func(string)&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> </span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  welcom, ok := welcomSymbol.(<span class="function"><span class="keyword">func</span><span class="params">(name <span class="keyword">string</span>)</span>)</span></span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;welcom must be func(string)&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> </span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  hello(<span class="string">&quot;World&quot;</span>)</span><br><span class="line">  welcom(<span class="string">&quot;World&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行后输出:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin hello has been loaded
+plugin.Open(&quot;./lib/welcom&quot;): plugin already loaded</code></pre>
+<p>这里我们明明加载的是不同插件,为什么会报plugin already loaded错误呢?<br>首先, Golang插件并不是通过文件名来判断插件是否一样的, 而是通过pluginpath来判断的, 默认情况下, 插件的pluginpath是由内部算法生成, 格式为: “plugin/unnamed-“ + root.Package.Internal.BuildID。在上面的例子中, 我们只是修改了helloworld/main.go文件, 其pluginpath并没有因为内容的改变而变化, 所以被判断为同一插件。又由于插件内容发生了变化, 所以抛出了错误。</p>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><blockquote>
+<p><strong>1.12及以前版本</strong></p>
+</blockquote>
+<p>我们可以在编译时指定 –ldflags=”-pluginpath=xxx”来修改pluginpath。</p>
+<pre><code>go build -o lib/hello.so --buildmode=plugin --ldflags=&quot;-pluginpath=hello&quot; test_plugin/plugins/helloworld</code></pre>
+<blockquote>
+<p><strong>1.13及以上版本</strong></p>
+</blockquote>
+<p>1.13及以上版本修改pluginpath的话, 会在载入plugin时, 报 could not find symbol 错误, 目前有两种解决方法:</p>
+<ul>
+<li><p>在编译脚本中, 添加移动命令, 使源码路径不同</p>
+</li>
+<li><p>我们在例子中都是按照包来编译的, 事实上如果直接使用main.go编译, 则最终插件的pluginpath中计算BuildID时会将源文件hash, 如:</p>
+<pre><code>go build -o lib/hello.so plugins/helloworld/main.go
+go build -o lib/welcom.so plugins/helloworld/main.go</code></pre>
+<p>这样编译出的两个插件可以同时加载<br>运行test_plugin/main.go后, 输出如下:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin hello has been loaded
+&amp;&#123;plugin/unnamed-afaca2345a9b922ec7f099641931847c502569ca  0xc0000240c0 map[Hello:0x7fce554c7f40]&#125;
+plugin hello has been loaded
+&amp;&#123;plugin/unnamed-0a49c149f030bba7f1e3ff737985365cb997b9e2  0xc000024120 map[Welcom:0x7fce55032f40]&#125;</code></pre>
+</li>
+<li><h3 id="插件内容完全相同-仅文件名不同-同时加载报错"><a href="#插件内容完全相同-仅文件名不同-同时加载报错" class="headerlink" title="插件内容完全相同, 仅文件名不同, 同时加载报错"></a>插件内容完全相同, 仅文件名不同, 同时加载报错</h3></li>
+</ul>
+<p>首先复制一份welcom.so, 并命名为<a href="mailto:&#x77;&#x65;&#x6c;&#x63;&#x6f;&#x6d;&#64;&#x76;&#50;&#46;&#x73;&#x6f;">&#x77;&#x65;&#x6c;&#x63;&#x6f;&#x6d;&#64;&#x76;&#50;&#46;&#x73;&#x6f;</a>, 然后修改main.go, 如下:</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getPluginMethod</span><span class="params">(pluginPath, method <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">	plugin, err := plugin.Open(pluginPath)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(plugin)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> plugin.Lookup(method)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">	_, err := getPluginMethod(<span class="string">&quot;./lib/welcom.so&quot;</span>, <span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	_, err = getPluginMethod(<span class="string">&quot;./lib/welcom@v2.so&quot;</span>, <span class="string">&quot;Welcom&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出如下:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin welcom has been loaded
+&amp;&#123;test_plugin/plugins/helloworld  0xc0000240c0 map[Welcom:0x7f7b919b8e80]&#125;
+plugin.Open(&quot;./lib/welcom@v2&quot;): plugin already loaded</code></pre>
+<blockquote>
+<h2 id="多个plugin中相同的依赖包只会被导入一次"><a href="#多个plugin中相同的依赖包只会被导入一次" class="headerlink" title="多个plugin中相同的依赖包只会被导入一次"></a>多个plugin中相同的依赖包只会被导入一次</h2></blockquote>
+<p>如标题所述, 如果多个plugin中导入了相同的依赖包, 那么该依赖只会在第一个插件载入的同时进行加载, 随后的所有相关插件载入时都不会重复导入该依赖, 并且即使各个插件在编译时实际依赖的包的版本不同, 只要该依赖的导入路径没有变化, 就不会重复导入, 甚至如果主程序中已经导入过该依赖, 挂在所有插件都不会重新导入该依赖。所以, <strong><em>在公共依赖中应尽可能不去使用全局变量, 编译插件时, 应尽可能保证所用依赖的版本相同。</em></strong></p>
+<blockquote>
+<h2 id="复杂对象传值问题"><a href="#复杂对象传值问题" class="headerlink" title="复杂对象传值问题"></a>复杂对象传值问题</h2></blockquote>
+<h3 id="现象-1"><a href="#现象-1" class="headerlink" title="现象"></a>现象</h3><p>首先修改plugins/helloworld/main.go文件</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;plugin welcom has been loaded&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Welcom</span><span class="params">(name <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;Welcom &quot;</span> + name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Hello</span><span class="params">(user *User)</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;Hello &quot;</span> + user.Name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>test_plugin/main.go修改为</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;fmt&quot;</span></span><br><span class="line">  <span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getPluginMethod</span><span class="params">(pluginPath, method <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">	plugin, err := plugin.Open(pluginPath)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Println(plugin)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> plugin.Lookup(method)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">callHello</span><span class="params">(pluginPath <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	symbol, err := getPluginMethod(pluginPath, <span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	hello, ok := symbol.(<span class="function"><span class="keyword">func</span><span class="params">(*User)</span>)</span></span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		<span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;Hello must be func(*main.User), not %T&quot;</span>, symbol)</span><br><span class="line">	&#125;</span><br><span class="line">	hello(&amp;User&#123;</span><br><span class="line">		Name: <span class="string">&quot;World&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">	err := callHello(<span class="string">&quot;./lib/hello.so&quot;</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		fmt.Println(err.Error())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行后输出:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin welcom has been loaded
+&amp;&#123;test_plugin/plugins/helloworld  0xc0000240c0 map[Hello:0x7f711d7c62c0 Welcom:0x7f711d7c61e0]&#125;
+Hello must be func*(main.User), not func(*main.User)</code></pre>
+<h3 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h3><ul>
+<li><p>方案1: 在主程序与插件之间进行数据交换时应尽可能使用接口, 如:</p>
+<p>将test_plugin/plugins/helloworld/main.go修改为</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">  fmt.Println(<span class="string">&quot;plugin welcom has been loaded&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Welcom</span><span class="params">(name <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">  fmt.Println(<span class="string">&quot;Welcom &quot;</span> + name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">interface</span> &#123;</span><br><span class="line">  Name() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Hello</span><span class="params">(u <span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">  user, ok := u.(User)</span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;not a valid user&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line">  fmt.Println(<span class="string">&quot;Hello &quot;</span> + user.Name())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>test_plugin/main.go修改为</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;fmt&quot;</span></span><br><span class="line">  <span class="string">&quot;plugin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">  name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(u *User)</span> <span class="title">Name</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">  <span class="keyword">return</span> u.name</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getPluginMethod</span><span class="params">(pluginPath, method <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">  plugin, err := plugin.Open(pluginPath)</span><br><span class="line">  <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">  &#125;</span><br><span class="line">  fmt.Println(plugin)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> plugin.Lookup(method)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">callHello</span><span class="params">(pluginPath <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">  symbol, err := getPluginMethod(pluginPath, <span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">  <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">  &#125;</span><br><span class="line">  hello, ok := symbol.(<span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;Hello must be func(*main.User), not %T&quot;</span>, symbol)</span><br><span class="line">  &#125;</span><br><span class="line">  hello(&amp;User&#123;</span><br><span class="line">    name: <span class="string">&quot;World&quot;</span>,</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  fmt.Println(<span class="string">&quot;begin main&quot;</span>)</span><br><span class="line"></span><br><span class="line">  err := callHello(<span class="string">&quot;./lib/hello.so&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">    fmt.Println(err.Error())</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行后输出为:</p>
+<pre><code>[root@localhost plugin]# go run main.go
+begin main
+plugin welcom has been loaded
+&amp;&#123;test_plugin/plugins/helloworld  0xc0000240c0 map[Hello:0x7f05b2f7d2c0 Welcom:0x7f05b2f7d1e0]&#125;
+Hello World</code></pre>
+</li>
+<li><p>方案2: 在公共库中定义需要交换的数据结构</p>
+</li>
+</ul>
+<blockquote>
+<h2 id="内存泄漏"><a href="#内存泄漏" class="headerlink" title="内存泄漏"></a>内存泄漏</h2></blockquote>
+<p>这个很好理解, 主要原因还是Golang插件只能打开而不能卸载, 在实现热加载功能时, 稍一不注意就会出现内存泄漏</p>
+]]></content>
+      <categories>
+        <category>学习日志</category>
+        <category>Golang</category>
+      </categories>
+      <tags>
+        <tag>Golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Golang深拷贝</title>
+    <url>/2022/03/06/Golang%E6%B7%B1%E6%8B%B7%E8%B4%9D/</url>
+    <content><![CDATA[<h1 id="Go里的copy"><a href="#Go里的copy" class="headerlink" title="Go里的copy"></a>Go里的copy</h1><p>在Go程序里，从变量赋值，到函数传参，对象的复制随处可见，用过其他语言的话，可能会由于惯性思维踩到Go对象复制的坑，例如：</p>
+<ul>
+<li><h2 id="变量赋值"><a href="#变量赋值" class="headerlink" title="变量赋值"></a>变量赋值</h2><p>在Java里类型分为基本类型和引用类型，对于基础类型的变量在赋值给另一变量时，实际是对该变量做了一次copy，这点在Golang中也不例外。然而对于非基础类型的变量，在赋值给另一变量时，在Java中实际上是copy了对象的引用，对新的变量的任何修改都会反映到原变量上，例如：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">        <span class="keyword">public</span> String name;</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">int</span> age;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">Person</span><span class="params">(String name, <span class="keyword">int</span> age)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.name = name;</span><br><span class="line">            <span class="keyword">this</span>.age = age;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Person a = <span class="keyword">new</span> Person(<span class="string">&quot;one&quot;</span>, <span class="number">1</span>);</span><br><span class="line">        Person b = a;</span><br><span class="line">        b.age = <span class="number">10</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;person a&#x27;s age is: &quot;</span> + a.age);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>❯ java ./Test.java
+person a&#39;s age is: 10</code></pre>
+<p>但是在Go里，当把一个复杂对象变量赋值给另一个变量时，实际上是做了一次浅拷贝，所以当修改新变量的非指针和引用类型字段时，原变量是不会被影响的，例如：</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> House <span class="keyword">struct</span> &#123;</span><br><span class="line">        Address <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">        Name <span class="keyword">string</span></span><br><span class="line">        Age <span class="keyword">int</span></span><br><span class="line">        House House</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        a := Person&#123;Name: <span class="string">&quot;one&quot;</span>, Age: <span class="number">1</span>, House: House&#123;Address: <span class="string">&quot;here&quot;</span>&#125;&#125;</span><br><span class="line">        b := a</span><br><span class="line">        b.Age = <span class="number">10</span></span><br><span class="line">        fmt.Printf(<span class="string">&quot;person a&#x27;s age is %d\n&quot;</span>, a.Age)</span><br><span class="line"></span><br><span class="line">        b.House.Address = <span class="string">&quot;there&quot;</span></span><br><span class="line">        fmt.Printf(<span class="string">&quot;person a&#x27;s address is &#x27;%s&#x27;&quot;</span>, a.House.Address)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>❯ go run .\main.go
+person a&#39;s age is 1
+person a&#39;s address is &#39;here&#39;</code></pre>
+<p>注意到修改变量<code>b</code>的House字段并没有影响变量<code>a</code>的House，这是因为<code>House</code>字段是值类型。在Go里除了指针、slice、map, channel之外的类型其实都是值类型，所以House字段的和其他所有基础类型一样，拷贝时是将整个对象进行拷贝，而不像Java那样仅仅拷贝对象的引用。</p>
+</li>
+<li><h2 id="函数传参"><a href="#函数传参" class="headerlink" title="函数传参"></a>函数传参</h2><p>在Go中函数传参实际都会发生变量的复制，即使是引用类型也不例外，并没有传引用的概念，这点要和Java区分开。所以在Go函数里修改非引用类型参数并不会改变原始参数的值，但是对于引用类型，实际是隐式传入了变量的指针，所以对于这类参数的的修改，就像Java那样会改变原始参数的值。Go函数参数传值的规范更准确的说是只针对数据结构中固定的部分传值，例如传递slice时，仅仅是对slice结构体做了浅拷贝，其间接指向的内存并不会被复制，因此如果想通过一些hack的方式修改传入函数的slice结构的len字段时，并不会改变原始实参slice的len</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> slice <span class="keyword">struct</span> &#123;</span><br><span class="line">    array unsafe.Pointer</span><br><span class="line">    <span class="built_in">len</span>   <span class="keyword">int</span></span><br><span class="line">    <span class="built_in">cap</span>   <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">changeSliceLength</span><span class="params">(buf []<span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    ptr := (*slice)(unsafe.Pointer(&amp;buf))</span><br><span class="line">    ptr.<span class="built_in">len</span> = <span class="number">100</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    buf[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">5</span>, <span class="number">10</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">    changeSliceLength(a)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code>❯ go run .\main.go
+a[0]: 0, length of a: 5
+length of buf: 5  
+length of buf: 100
+a[0]: 1, length of a: 5</code></pre>
+</li>
+</ul>
+<h1 id="Go里如何deepcopy"><a href="#Go里如何deepcopy" class="headerlink" title="Go里如何deepcopy"></a>Go里如何deepcopy</h1><p>在写Go程序时，难免面遇到需要深拷贝的场景，对于没有指针或者引用类型的结构，我们仅仅需要将该对象赋值给另一个变量就能轻易试下，但实际项目中, 复杂结构免不了有指针类型或者引用类型字段，而Go里又没有像Java里的Cloneable，这个时候如何实现深拷贝？</p>
+<ul>
+<li><h2 id="基于序列化-反序列化实现深拷贝"><a href="#基于序列化-反序列化实现深拷贝" class="headerlink" title="基于序列化/反序列化实现深拷贝"></a>基于序列化/反序列化实现深拷贝</h2><p>简单地说，我们可以先把对象序列化为字符串，然后再从字符串反序列化为对象，这就完成了一次深拷贝。序列化/反序列化可以选择json、thrift、protobuf等库，这里以json为例：</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> House <span class="keyword">struct</span> &#123;</span><br><span class="line">    Address <span class="keyword">string</span> <span class="string">`json:&quot;address&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name <span class="keyword">string</span> <span class="string">`json:&quot;name&quot;`</span></span><br><span class="line">    House *House <span class="string">`json:&quot;house&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := &amp;Person&#123;Name: <span class="string">&quot;one&quot;</span>, House: &amp;House&#123;Address: <span class="string">&quot;one&#x27;s house&quot;</span>&#125;&#125;</span><br><span class="line">    as, _ := json.Marshal(a)</span><br><span class="line">    <span class="keyword">var</span> b Person</span><br><span class="line">    json.Unmarshal(as, &amp;b)</span><br><span class="line">    b.House.Address = <span class="string">&quot;two&#x27;s house&quot;</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;a&#x27;s address: %s, b&#x27;s address: %s\n&quot;</span>, a.House.Address, b.House.Address)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>❯ go run .\main.go
+a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house</code></pre>
+<p>采用这种方式进行深拷贝需要注意，由于会先序列化为字符串，因此会额外占用内存，当对象比较大时，需要格外留意内存占用情况，即使是thrift和protobuf这样的压缩比很高的库，也是存在风险的。另外在整个序列化和反序列化过程中，有可能由于频繁创建对象、申请内存，导致cpu占用也跟着升高！！！</p>
+</li>
+<li><h2 id="使用reflect进行深拷贝"><a href="#使用reflect进行深拷贝" class="headerlink" title="使用reflect进行深拷贝"></a>使用reflect进行深拷贝</h2><p>事实上，json和protobuf在序列化和反序列化时，使用了reflect库获取对象的字段和类型，那么我们也可以直接使用reflect来递归的读取对象的字段，并进行copy，这样就减少了序列化带来的内存占用，以及频繁字节数组扩容带来的cpu占用上升问题，并且可以完全去除反序列化的过程。不过这种方式的问题是，Go的reflect.Value对象不能复用，即使是相同类型的两个不同变量，也需要重新创建reflect.Value对象，这也造成reflect性能很差。</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> House <span class="keyword">struct</span> &#123;</span><br><span class="line">	Address <span class="keyword">string</span> <span class="string">`json:&quot;address&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name  <span class="keyword">string</span> <span class="string">`json:&quot;name&quot;`</span></span><br><span class="line">	House *House <span class="string">`json:&quot;house&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">shallowCopyValue</span><span class="params">(v reflect.Value)</span> <span class="title">reflect</span>.<span class="title">Value</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> v.Type().Kind() &#123;</span><br><span class="line">	<span class="keyword">case</span> reflect.Ptr:</span><br><span class="line">		<span class="keyword">return</span> shallowCopyValue(v.Elem()).Addr()</span><br><span class="line">	<span class="keyword">case</span> reflect.Interface:</span><br><span class="line">		<span class="keyword">return</span> shallowCopyValue(v.Elem())</span><br><span class="line">	<span class="keyword">case</span> reflect.Array, reflect.Map, reflect.Func, reflect.Chan:</span><br><span class="line">		<span class="keyword">return</span> v</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="keyword">return</span> reflect.New(v.Type()).Elem()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">deepcopyValue</span><span class="params">(v reflect.Value)</span> <span class="title">reflect</span>.<span class="title">Value</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> value reflect.Value</span><br><span class="line">	<span class="keyword">if</span> v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface &#123;</span><br><span class="line">		value = v.Elem()</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		value = v</span><br><span class="line">	&#125;</span><br><span class="line">	newIns := shallowCopyValue(v)</span><br><span class="line">	newValue := newIns</span><br><span class="line">	<span class="keyword">if</span> v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface &#123;</span><br><span class="line">		newValue = newIns.Elem()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; value.Kind() == reflect.Struct &amp;&amp; i &lt; value.Type().NumField(); i++ &#123;</span><br><span class="line">		field := value.Field(i)</span><br><span class="line">		<span class="keyword">if</span> !field.IsValid() &#123;</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		newValue.Field(i).Set(deepcopyValue(field))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> newIns</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Deepcopy</span><span class="params">(ins <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> == ins &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> deepcopyValue(reflect.ValueOf(ins)).Interface()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := &amp;Person&#123;Name: <span class="string">&quot;one&quot;</span>, House: &amp;House&#123;Address: <span class="string">&quot;one&#x27;s house&quot;</span>&#125;&#125;</span><br><span class="line">	b := Deepcopy(a).(*Person)</span><br><span class="line">	b.House.Address = <span class="string">&quot;two&#x27;s house&quot;</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;a&#x27;s address: %s, b&#x27;s address: %s\n&quot;</span>, a.House.Address, b.House.Address)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<pre><code>❯ go run main.go
+a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house</code></pre>
+</li>
+<li><h2 id="在编译期根据对象结构生成相应的复制代码"><a href="#在编译期根据对象结构生成相应的复制代码" class="headerlink" title="在编译期根据对象结构生成相应的复制代码"></a>在编译期根据对象结构生成相应的复制代码</h2><p>一般的，我们深拷贝一个简单对象，可以直接new一个新对象，然后对每个字段单独赋值来达到深拷贝的目的，这种方式相比前两种方式资源占用会更少，但是这种方式对于字段很多、层次很复杂的结构来说，要写的语句很多，而且实际开发中，任何结构都会不断变化，这种方式不能应对时刻变化的需求，如果能做到根据结构的定义，动态生成每个字段的复制代码，那不就是理想的深拷贝方法吗。幸运的是Go的标准库提供了对go文件词法解析的库<code>go/ast</code>，借助这个库我们可以在编译期递归解析代码里的结构体，生成每个字段的复制语句.</p>
+<h3 id="go-ast包"><a href="#go-ast包" class="headerlink" title="go/ast包"></a>go/ast包</h3></li>
+</ul>
+]]></content>
+      <categories>
+        <category>学习日志</category>
+        <category>Golang</category>
+      </categories>
+      <tags>
+        <tag>Golang</tag>
+      </tags>
+  </entry>
+</search>
