@@ -8,7 +8,11 @@ subtitle: "If it feels easy, don't do it. Don't let the world spoil you."
 description: ''
 keywords:
 author: Bin
-language: zh-Hans
+language: 
+  - zh-CN
+  - en
+language_switcher: true
+
 timezone: ''
 
 # URL
