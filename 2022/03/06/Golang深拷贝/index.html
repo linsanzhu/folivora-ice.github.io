@@ -31,7 +31,7 @@
 <meta property="og:description" content="Go里的copy在Go程序里，从变量赋值，到函数传参，对象的复制随处可见，用过其他语言的话，可能会由于惯性思维踩到Go对象复制的坑，例如：  变量赋值在Java里类型分为基本类型和引用类型，对于基础类型的变量在赋值给另一变量时，实际是对该变量做了一次copy，">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-03-06T06:55:33.000Z">
-<meta property="article:modified_time" content="2022-03-12T14:45:05.812Z">
+<meta property="article:modified_time" content="2022-03-19T16:33:34.228Z">
 <meta property="article:author" content="Bin">
 <meta property="article:tag" content="Golang">
 <meta name="twitter:card" content="summary">
@@ -151,7 +151,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Go%E9%87%8C%E7%9A%84copy"><span class="nav-number">1.</span> <span class="nav-text">Go里的copy</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F%E8%B5%8B%E5%80%BC"><span class="nav-number">1.1.</span> <span class="nav-text">变量赋值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E4%BC%A0%E5%8F%82"><span class="nav-number">1.2.</span> <span class="nav-text">函数传参</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Go%E9%87%8C%E5%A6%82%E4%BD%95deepcopy"><span class="nav-number">2.</span> <span class="nav-text">Go里如何deepcopy</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%BA%8F%E5%88%97%E5%8C%96-x2F-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.1.</span> <span class="nav-text">基于序列化&#x2F;反序列化实现深拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8reflect%E8%BF%9B%E8%A1%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.2.</span> <span class="nav-text">使用reflect进行深拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E7%BC%96%E8%AF%91%E6%9C%9F%E6%A0%B9%E6%8D%AE%E5%AF%B9%E8%B1%A1%E7%BB%93%E6%9E%84%E7%94%9F%E6%88%90%E7%9B%B8%E5%BA%94%E7%9A%84%E5%A4%8D%E5%88%B6%E4%BB%A3%E7%A0%81"><span class="nav-number">2.3.</span> <span class="nav-text">在编译期根据对象结构生成相应的复制代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#go-x2F-ast%E6%8A%BD%E8%B1%A1%E8%AF%AD%E6%B3%95%E6%A0%91"><span class="nav-number">2.3.1.</span> <span class="nav-text">go&#x2F;ast抽象语法树</span></a></li></ol></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Go%E9%87%8C%E7%9A%84copy"><span class="nav-number">1.</span> <span class="nav-text">Go里的copy</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F%E8%B5%8B%E5%80%BC"><span class="nav-number">1.1.</span> <span class="nav-text">变量赋值</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E4%BC%A0%E5%8F%82"><span class="nav-number">1.2.</span> <span class="nav-text">函数传参</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Go%E9%87%8C%E5%A6%82%E4%BD%95deepcopy"><span class="nav-number">2.</span> <span class="nav-text">Go里如何deepcopy</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%BA%8F%E5%88%97%E5%8C%96-x2F-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.1.</span> <span class="nav-text">基于序列化&#x2F;反序列化实现深拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8reflect%E8%BF%9B%E8%A1%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.2.</span> <span class="nav-text">使用reflect进行深拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E7%BC%96%E8%AF%91%E6%9C%9F%E6%A0%B9%E6%8D%AE%E5%AF%B9%E8%B1%A1%E7%BB%93%E6%9E%84%E7%94%9F%E6%88%90%E7%9B%B8%E5%BA%94%E7%9A%84%E5%A4%8D%E5%88%B6%E4%BB%A3%E7%A0%81"><span class="nav-number">2.3.</span> <span class="nav-text">在编译期根据对象结构生成相应的复制代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#go-x2F-ast%E6%8A%BD%E8%B1%A1%E8%AF%AD%E6%B3%95%E6%A0%91"><span class="nav-number">2.3.1.</span> <span class="nav-text">go&#x2F;ast抽象语法树</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90"><span class="nav-number">2.3.2.</span> <span class="nav-text">代码生成</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -251,7 +251,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-03-12 22:45:05" itemprop="dateModified" datetime="2022-03-12T22:45:05+08:00">2022-03-12</time>
+      <time title="修改时间：2022-03-20 00:33:34" itemprop="dateModified" datetime="2022-03-20T00:33:34+08:00">2022-03-20</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -290,8 +290,8 @@ person a&#39;s age is: 10
 person a&#39;s age is 1
 person a&#39;s address is &#39;here&#39;
 </code></pre>
-注意到修改变量b的House字段并没有影响变量a的House，这是因为House字段是值类型。在Go里除了指针、slice、map, channel、interface之外的类型其实都是值类型，所以House字段的和其他所有基础类型一样，拷贝时是将整个对象进行拷贝(即值拷贝)，而不像Java那样仅仅拷贝对象的引用。</li>
-<li><h2 id="函数传参"><a href="#函数传参" class="headerlink" title="函数传参"></a>函数传参</h2>在Go中函数传参实际都会发生变量的复制，即使是引用类型也不例外，并没有传引用的概念，这点要和Java区分开。所以在Go函数里修改非引用类型参数并不会改变原始参数的值，但是对于引用类型，实际是隐式传入了变量的指针，所以对于这类参数的的修改，就像Java那样会改变原始参数的值。Go函数参数传值的规范更准确的说是只针对数据结构中固定的部分传值，例如传递slice时，仅仅是对slice结构体做了浅拷贝，其间接指向的内存并不会被复制，因此如果想通过一些hack的方式修改传入函数的slice结构的len字段时，并不会改变原始实参slice的len<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> slice <span class="keyword">struct</span> &#123;</span><br><span class="line">    array unsafe.Pointer</span><br><span class="line">    <span class="built_in">len</span>   <span class="type">int</span></span><br><span class="line">    <span class="built_in">cap</span>   <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">changeSliceLength</span><span class="params">(buf []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    ptr := (*slice)(unsafe.Pointer(&amp;buf))</span><br><span class="line">    ptr.<span class="built_in">len</span> = <span class="number">100</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    buf[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">5</span>, <span class="number">10</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">    changeSliceLength(a)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+注意到修改变量b的House字段并没有影响变量a的House，这是因为House字段是值类型。在Go里除了指针、slice、map, channel、interface之外的类型其实都是值类型，所以House字段和其他所有基础类型一样，拷贝时是将整个对象进行拷贝(即值拷贝)，而不像Java那样仅仅拷贝对象的引用。</li>
+<li><h2 id="函数传参"><a href="#函数传参" class="headerlink" title="函数传参"></a>函数传参</h2>在Go中函数传参实际都会发生变量的复制，即使是引用类型也不例外，并没有传引用的概念，这点要和Java区分开。所以在Go函数里修改非引用类型参数并不会改变原始参数的值，但是对于引用类型，实际是隐式传入了变量的指针，所以对于这类参数的的修改，就像Java那样会改变原始参数的值。Go函数参数传值的规范更准确的说是只针对数据结构中固定的部分传值，例如传递slice时，仅仅是对slice结构体做了浅拷贝，其间接指向的内存并不会被复制，因此如果通过一些hack的方式修改传入函数的slice结构的len字段时，并不会改变原始实参slice的len, 这一点得特别注意，如果将slice传入函数，在函数里对其扩容，原slice并不会改变，这也是为什么append函数会返回一个新的slice。<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> slice <span class="keyword">struct</span> &#123;</span><br><span class="line">    array unsafe.Pointer</span><br><span class="line">    <span class="built_in">len</span>   <span class="type">int</span></span><br><span class="line">    <span class="built_in">cap</span>   <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">changeSliceLength</span><span class="params">(buf []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    ptr := (*slice)(unsafe.Pointer(&amp;buf))</span><br><span class="line">    ptr.<span class="built_in">len</span> = <span class="number">100</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;length of buf: %d\n&quot;</span>, <span class="built_in">len</span>(buf))</span><br><span class="line">    buf[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">5</span>, <span class="number">10</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">    changeSliceLength(a)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;a[0]: %d, length of a: %d\n&quot;</span>, a[<span class="number">0</span>], <span class="built_in">len</span>(a))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <pre><code>❯ go run .\main.go
 a[0]: 0, length of a: 5
 length of buf: 5  
@@ -317,7 +317,177 @@ a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house
 </li>
 <li><h2 id="在编译期根据对象结构生成相应的复制代码"><a href="#在编译期根据对象结构生成相应的复制代码" class="headerlink" title="在编译期根据对象结构生成相应的复制代码"></a>在编译期根据对象结构生成相应的复制代码</h2><p>一般的，我们深拷贝一个简单对象，可以直接new一个新对象，然后对每个字段单独赋值来达到深拷贝的目的，这种方式相比前两种方式资源占用会更少，但是这种方式对于字段很多、层次很复杂的结构来说，要写的语句很多，而且实际开发中，任何结构都会不断变化，这种方式不能应对时刻变化的需求，如果能做到根据结构的定义，动态生成每个字段的复制代码，那不就是理想的深拷贝方法吗。幸运的是Go的标准库提供了对go文件语法解析的库<code>go/ast</code>，借助这个库我们可以在编译期递归解析代码里的结构体，生成每个字段的复制语句.</p>
 <h3 id="go-x2F-ast抽象语法树"><a href="#go-x2F-ast抽象语法树" class="headerlink" title="go&#x2F;ast抽象语法树"></a>go&#x2F;ast抽象语法树</h3><p>先来看一个读取并解析文件的例子</p>
-<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;go/token&quot;</span></span><br><span class="line">  <span class="string">&quot;go/parser&quot;</span></span><br><span class="line">  <span class="string">&quot;log&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  fset := token.NewFileSet()</span><br><span class="line">  f, err := parser.ParseFile(fset, <span class="string">&quot;helloworld.go&quot;</span>, <span class="literal">nil</span>, parser.SpuriousErrors)</span><br><span class="line">  <span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">    log.Fatal(err)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;go/token&quot;</span></span><br><span class="line">  <span class="string">&quot;go/parser&quot;</span></span><br><span class="line">  <span class="string">&quot;go/ast&quot;</span></span><br><span class="line">  <span class="string">&quot;log&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fset := token.NewFileSet()</span><br><span class="line">	f, err := parser.ParseFile(fset, <span class="string">&quot;person.go&quot;</span>, <span class="literal">nil</span>, parser.SpuriousErrors)</span><br><span class="line">	<span class="keyword">if</span> <span class="literal">nil</span> != err &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	ast.Print(fset, f)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们在这里引入的<code>go/token</code>包定义了Go语言的词法标记和其对应的基础操作，而<code>go/parser</code>包是Go源码的解析器。这里我们使用ParseFile方法解析person.go文件，其返回一个AST对象。随后我们使用ast包提供的Print方法打印整个抽象语法数。</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// person.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Home <span class="keyword">struct</span> &#123;</span><br><span class="line">	Address <span class="type">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Age <span class="type">int</span></span><br><span class="line">	Home *Home</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code>❯ go run ./main.go
+  0  *ast.File &#123;
+  1  .  Package: person.go:1:1
+  2  .  Name: *ast.Ident &#123;
+  3  .  .  NamePos: person.go:1:9
+  4  .  .  Name: &quot;main&quot;
+  5  .  &#125;
+  6  .  Decls: []ast.Decl (len = 2) &#123;
+  7  .  .  0: *ast.GenDecl &#123;
+  8  .  .  .  TokPos: person.go:3:1
+  9  .  .  .  Tok: type
+10  .  .  .  Lparen: -
+11  .  .  .  Specs: []ast.Spec (len = 1) &#123;
+12  .  .  .  .  0: *ast.TypeSpec &#123;
+13  .  .  .  .  .  Name: *ast.Ident &#123;
+14  .  .  .  .  .  .  NamePos: person.go:3:6
+15  .  .  .  .  .  .  Name: &quot;Home&quot;
+16  .  .  .  .  .  .  Obj: *ast.Object &#123;
+17  .  .  .  .  .  .  .  Kind: type
+18  .  .  .  .  .  .  .  Name: &quot;Home&quot;
+19  .  .  .  .  .  .  .  Decl: *(obj @ 12)
+20  .  .  .  .  .  .  &#125;
+21  .  .  .  .  .  &#125;
+22  .  .  .  .  .  Assign: -
+23  .  .  .  .  .  Type: *ast.StructType &#123;
+24  .  .  .  .  .  .  Struct: person.go:3:11
+25  .  .  .  .  .  .  Fields: *ast.FieldList &#123;
+26  .  .  .  .  .  .  .  Opening: person.go:3:18
+27  .  .  .  .  .  .  .  List: []*ast.Field (len = 1) &#123;
+28  .  .  .  .  .  .  .  .  0: *ast.Field &#123;
+29  .  .  .  .  .  .  .  .  .  Names: []*ast.Ident (len = 1) &#123;
+30  .  .  .  .  .  .  .  .  .  .  0: *ast.Ident &#123;
+31  .  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:4:2
+32  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Address&quot;
+33  .  .  .  .  .  .  .  .  .  .  .  Obj: *ast.Object &#123;
+34  .  .  .  .  .  .  .  .  .  .  .  .  Kind: var
+35  .  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Address&quot;
+36  .  .  .  .  .  .  .  .  .  .  .  .  Decl: *(obj @ 28)
+37  .  .  .  .  .  .  .  .  .  .  .  &#125;
+38  .  .  .  .  .  .  .  .  .  .  &#125;
+39  .  .  .  .  .  .  .  .  .  &#125;
+40  .  .  .  .  .  .  .  .  .  Type: *ast.Ident &#123;
+41  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:4:10
+42  .  .  .  .  .  .  .  .  .  .  Name: &quot;string&quot;
+43  .  .  .  .  .  .  .  .  .  &#125;
+44  .  .  .  .  .  .  .  .  &#125;
+45  .  .  .  .  .  .  .  &#125;
+46  .  .  .  .  .  .  .  Closing: person.go:5:1
+47  .  .  .  .  .  .  &#125;
+48  .  .  .  .  .  .  Incomplete: false
+49  .  .  .  .  .  &#125;
+50  .  .  .  .  &#125;
+51  .  .  .  &#125;
+52  .  .  .  Rparen: -
+53  .  .  &#125;
+54  .  .  1: *ast.GenDecl &#123;
+55  .  .  .  TokPos: person.go:7:1
+56  .  .  .  Tok: type
+57  .  .  .  Lparen: -
+58  .  .  .  Specs: []ast.Spec (len = 1) &#123;
+59  .  .  .  .  0: *ast.TypeSpec &#123;
+60  .  .  .  .  .  Name: *ast.Ident &#123;
+61  .  .  .  .  .  .  NamePos: person.go:7:6
+62  .  .  .  .  .  .  Name: &quot;Person&quot;
+63  .  .  .  .  .  .  Obj: *ast.Object &#123;
+64  .  .  .  .  .  .  .  Kind: type
+65  .  .  .  .  .  .  .  Name: &quot;Person&quot;
+66  .  .  .  .  .  .  .  Decl: *(obj @ 59)
+67  .  .  .  .  .  .  &#125;
+68  .  .  .  .  .  &#125;
+69  .  .  .  .  .  Assign: -
+70  .  .  .  .  .  Type: *ast.StructType &#123;
+71  .  .  .  .  .  .  Struct: person.go:7:13
+72  .  .  .  .  .  .  Fields: *ast.FieldList &#123;
+73  .  .  .  .  .  .  .  Opening: person.go:7:20
+74  .  .  .  .  .  .  .  List: []*ast.Field (len = 3) &#123;
+75  .  .  .  .  .  .  .  .  0: *ast.Field &#123;
+76  .  .  .  .  .  .  .  .  .  Names: []*ast.Ident (len = 1) &#123;
+77  .  .  .  .  .  .  .  .  .  .  0: *ast.Ident &#123;
+78  .  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:8:2
+79  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Name&quot;
+80  .  .  .  .  .  .  .  .  .  .  .  Obj: *ast.Object &#123;
+81  .  .  .  .  .  .  .  .  .  .  .  .  Kind: var
+82  .  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Name&quot;
+83  .  .  .  .  .  .  .  .  .  .  .  .  Decl: *(obj @ 75)
+84  .  .  .  .  .  .  .  .  .  .  .  &#125;
+85  .  .  .  .  .  .  .  .  .  .  &#125;
+86  .  .  .  .  .  .  .  .  .  &#125;
+87  .  .  .  .  .  .  .  .  .  Type: *ast.Ident &#123;
+88  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:8:7
+89  .  .  .  .  .  .  .  .  .  .  Name: &quot;string&quot;
+90  .  .  .  .  .  .  .  .  .  &#125;
+91  .  .  .  .  .  .  .  .  &#125;
+92  .  .  .  .  .  .  .  .  1: *ast.Field &#123;
+93  .  .  .  .  .  .  .  .  .  Names: []*ast.Ident (len = 1) &#123;
+94  .  .  .  .  .  .  .  .  .  .  0: *ast.Ident &#123;
+95  .  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:9:2
+96  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Age&quot;
+97  .  .  .  .  .  .  .  .  .  .  .  Obj: *ast.Object &#123;
+98  .  .  .  .  .  .  .  .  .  .  .  .  Kind: var
+99  .  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Age&quot;
+100  .  .  .  .  .  .  .  .  .  .  .  .  Decl: *(obj @ 92)
+101  .  .  .  .  .  .  .  .  .  .  .  &#125;
+102  .  .  .  .  .  .  .  .  .  .  &#125;
+103  .  .  .  .  .  .  .  .  .  &#125;
+104  .  .  .  .  .  .  .  .  .  Type: *ast.Ident &#123;
+105  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:9:7
+106  .  .  .  .  .  .  .  .  .  .  Name: &quot;int&quot;
+107  .  .  .  .  .  .  .  .  .  &#125;
+108  .  .  .  .  .  .  .  .  &#125;
+109  .  .  .  .  .  .  .  .  2: *ast.Field &#123;
+110  .  .  .  .  .  .  .  .  .  Names: []*ast.Ident (len = 1) &#123;
+111  .  .  .  .  .  .  .  .  .  .  0: *ast.Ident &#123;
+112  .  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:10:2
+113  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Home&quot;
+114  .  .  .  .  .  .  .  .  .  .  .  Obj: *ast.Object &#123;
+115  .  .  .  .  .  .  .  .  .  .  .  .  Kind: var
+116  .  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Home&quot;
+117  .  .  .  .  .  .  .  .  .  .  .  .  Decl: *(obj @ 109)
+118  .  .  .  .  .  .  .  .  .  .  .  &#125;
+119  .  .  .  .  .  .  .  .  .  .  &#125;
+120  .  .  .  .  .  .  .  .  .  &#125;
+121  .  .  .  .  .  .  .  .  .  Type: *ast.StarExpr &#123;
+122  .  .  .  .  .  .  .  .  .  .  Star: person.go:10:7
+123  .  .  .  .  .  .  .  .  .  .  X: *ast.Ident &#123;
+124  .  .  .  .  .  .  .  .  .  .  .  NamePos: person.go:10:8
+125  .  .  .  .  .  .  .  .  .  .  .  Name: &quot;Home&quot;
+126  .  .  .  .  .  .  .  .  .  .  .  Obj: *(obj @ 16)
+127  .  .  .  .  .  .  .  .  .  .  &#125;
+128  .  .  .  .  .  .  .  .  .  &#125;
+129  .  .  .  .  .  .  .  .  &#125;
+130  .  .  .  .  .  .  .  &#125;
+131  .  .  .  .  .  .  .  Closing: person.go:11:1
+132  .  .  .  .  .  .  &#125;
+133  .  .  .  .  .  .  Incomplete: false
+134  .  .  .  .  .  &#125;
+135  .  .  .  .  &#125;
+136  .  .  .  &#125;
+137  .  .  .  Rparen: -
+138  .  .  &#125;
+139  .  &#125;
+140  .  Scope: *ast.Scope &#123;
+141  .  .  Objects: map[string]*ast.Object (len = 2) &#123;
+142  .  .  .  &quot;Person&quot;: *(obj @ 63)
+143  .  .  .  &quot;Home&quot;: *(obj @ 16)
+144  .  .  &#125;
+145  .  &#125;
+146  .  Unresolved: []*ast.Ident (len = 3) &#123;
+147  .  .  0: *(obj @ 40)
+148  .  .  1: *(obj @ 87)
+149  .  .  2: *(obj @ 104)
+150  .  &#125;
+151  &#125;
+</code></pre>
+<p>通过与person.go源码比对，Package字段即源文件中的package关键字，Name字段即包名，而Decls字段则存放了源码中所有的结构体定义。Decls是一个ast.Decl类型的数组，go AST中所有声明节点都实现了Decl接口，因此我们在解析源码中所有结构体或类型定义时，只需要遍历Decls字段即可。<br>注意到Decl结构的Specs字段正是类型定义，他有两个关键字段：Name表示类型的名称，Type表示实际类型，在这里，Type是*ast.StructType类型, 这与我们声明中的struct对应，事实上Type字段也可能是其他类型，如：</p>
+<ul>
+<li>FuncType       表示函数类型</li>
+<li>InterfaceType  表示接口类型</li>
+<li>ArrayType      表示数组或Slice</li>
+<li>MapType        表示map</li>
+<li>ChanType       表示Channel</li>
+<li>Ident          表示标识符，可以表示变量名，或者基础类型如int，string</li>
+<li>ParenExpr      表示括号包裹的表达式</li>
+<li>SelectorExpr   表示字段选择器，如 a.field</li>
+<li>StarExpr       表示指针</li>
+</ul>
+<p>其中StructType的Fields字段即结构体的字段列表，他是Field类型的列表。Field包括两个关键字段，<code>Names</code> []*Ident类型，表示字段名, <code>Type</code> Expr类型，表示字段类型。<br>从上面的例子，我们对go AST结构有了一个大概印象，同时可以总结出通过AST获得结构体字段列表的方法，接下来我们以Person结构举例，实际生成他的深拷贝方法看看。</p>
+<h3 id="代码生成"><a href="#代码生成" class="headerlink" title="代码生成"></a>代码生成</h3></li>
 </ul>
 
     </div>
