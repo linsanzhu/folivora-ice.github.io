@@ -418,7 +418,9 @@ a[0]: 1, length of a: 5
 <li><h2 id="基于序列化-x2F-反序列化实现深拷贝"><a href="#基于序列化-x2F-反序列化实现深拷贝" class="headerlink" title="基于序列化&#x2F;反序列化实现深拷贝"></a>基于序列化&#x2F;反序列化实现深拷贝</h2><p>简单地说，我们可以先把对象序列化为字符串，然后再从字符串反序列化为对象，这就完成了一次深拷贝。序列化&#x2F;反序列化可以选择json、thrift、protobuf等库，这里以json为例：</p>
 <figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> House <span class="keyword">struct</span> &#123;</span><br><span class="line">    Address <span class="type">string</span> <span class="string">`json:&quot;address&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Person <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name <span class="type">string</span> <span class="string">`json:&quot;name&quot;`</span></span><br><span class="line">    House *House <span class="string">`json:&quot;house&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := &amp;Person&#123;Name: <span class="string">&quot;one&quot;</span>, House: &amp;House&#123;Address: <span class="string">&quot;one&#x27;s house&quot;</span>&#125;&#125;</span><br><span class="line">    as, _ := json.Marshal(a)</span><br><span class="line">    <span class="keyword">var</span> b Person</span><br><span class="line">    json.Unmarshal(as, &amp;b)</span><br><span class="line">    b.House.Address = <span class="string">&quot;two&#x27;s house&quot;</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;a&#x27;s address: %s, b&#x27;s address: %s\n&quot;</span>, a.House.Address, b.House.Address)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>❯ go run .\main.go<br>a’s address: one’s house, b’s address: two’s house</p>
+<pre><code>❯ go run .\main.go
+a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house
+</code></pre>
 <p>采用这种方式进行深拷贝需要注意，由于会先序列化为字符串，因此会额外占用内存，当对象比较大时，需要格外留意内存占用情况，即使是thrift和protobuf这样的压缩比很高的库，也是存在风险的。另外在整个序列化和反序列化过程中，有可能由于频繁创建对象、申请内存，导致cpu占用也跟着升高！！！</p>
 </li>
 <li><h2 id="使用reflect进行深拷贝"><a href="#使用reflect进行深拷贝" class="headerlink" title="使用reflect进行深拷贝"></a>使用reflect进行深拷贝</h2><p>事实上，json和protobuf在序列化和反序列化时，使用了reflect库获取对象的字段和类型，那么我们也可以直接使用reflect来递归的读取对象的字段，并进行copy，这样就减少了序列化带来的内存占用，以及频繁字节数组扩容带来的cpu占用上升问题，并且可以完全去除反序列化的过程。不过这种方式的问题是，Go的reflect.Value对象不能复用，即使是相同类型的两个不同变量，也需要重新创建reflect.Value对象，这也造成reflect性能很差。</p>
@@ -599,8 +601,9 @@ a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house
 <li>SelectorExpr   表示字段选择器，如 a.field</li>
 <li>StarExpr       表示指针</li>
 </ul>
-<p>其中StructType的Fields字段即结构体的字段列表，他是Field类型的列表。Field包括两个关键字段，<code>Names</code> []*Ident类型，表示字段名, <code>Type</code> Expr类型，表示字段类型。<br>从上面的例子，我们对go AST结构有了一个大概印象，同时可以总结出通过AST获得结构体字段列表的方法，接下来我们以Person结构举例，实际生成他的深拷贝方法看看。</p>
-<h3 id="代码生成"><a href="#代码生成" class="headerlink" title="代码生成"></a>代码生成</h3></li>
+<p>其中StructType的Fields字段即结构体的字段列表，他是Field类型的数组。Field包括两个关键字段，<code>Names</code> []*Ident类型，表示字段名, <code>Type</code> Expr类型，表示字段类型。<br>从上面的例子，我们对go AST结构有了一个大概印象，同时可以总结出通过AST获得结构体字段列表的方法，接下来我们以Person结构举例，实际生成他的深拷贝方法看看。</p>
+<h3 id="深拷贝代码生成"><a href="#深拷贝代码生成" class="headerlink" title="深拷贝代码生成"></a>深拷贝代码生成</h3><p>拷贝一个对象，重点是拷贝对象的每一个字段，通过遍历AST树，我们可以获得Struct的字段列表，进一步生成每一个字段的复制代码。go&#x2F;ast包提供了<code>func Walk(v Visitor, node Node)</code>方法遍历AST树。****</p>
+</li>
 </ul>
 ]]></content>
       <categories>
