@@ -633,7 +633,7 @@ a&#39;s address: one&#39;s house, b&#39;s address: two&#39;s house
   person a: &amp;&#123;Name:A Age:10 Home:0xc000038240&#125;, home: &amp;&#123;Address:A&#39;s home&#125;
   person b: &amp;&#123;Name:A Age:10 Home:0xc000038250&#125;, home: &amp;&#123;Address:B&#39;s home&#125;
 </code></pre>
-<p>  这里Person和Home结构都比较简单，所以只考虑了基础类型和指针类型的拷贝，感兴趣的读者可以试着自己实现其他类型的拷贝，这里就不赘述了。<br>  以下为对以上的Person对象分别使用json序列化和Clone方法实现深拷贝的benchmark数据，可以看到Clone方法速度时json序列化的60倍，而内存占用则只有1&#x2F;23，当要复制的对象更复杂时，差距还会更大</p>
+<p>  这里Person和Home结构都比较简单，所以只考虑了基础类型和指针类型的拷贝，感兴趣的读者可以试着自己实现其他类型的拷贝，这里就不赘述了。<br>  以下为对以上的Person对象分别使用json序列化和Clone方法实现深拷贝的benchmark数据，可以看到Clone方法速度是json序列化的60倍，而内存占用则只有1&#x2F;23，当要复制的对象更复杂时，差距还会更大</p>
 <pre><code>  goos: windows
   goarch: amd64
   pkg: clone_gen
